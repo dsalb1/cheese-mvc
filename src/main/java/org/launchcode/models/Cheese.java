@@ -2,12 +2,20 @@ package org.launchcode.models;
 
 import org.hibernate.validator.constraints.Range;
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
 import javax.validation.constraints.*;
 
 /**
  * Created by Dan on 5/21/2017.
  */
+@Entity
 public class Cheese {
+
+    @Id
+    @GeneratedValue
+    private int id;
 
     @NotNull
     @Size(min=3, max=15)
@@ -23,27 +31,19 @@ public class Cheese {
 
     private CheeseType type;
 
-    private int cheeseId;
-    private static int nextId = 0;
 
     public Cheese(String name, String description) {
-        this(); //call the default constructor for the given class
         this.name = name;
         this.description = description;
         this.rating = rating;
     }
 
     public Cheese() {
-        cheeseId = nextId;
-        nextId++;
+
     }
 
-    public int getCheeseId() {
-        return cheeseId;
-    }
-
-    public void setCheeseId(int cheeseId) {
-        this.cheeseId = cheeseId;
+    public int getId() {
+        return id;
     }
 
     public String getName() {

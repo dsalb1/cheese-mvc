@@ -1,15 +1,15 @@
 package org.launchcode.controllers;
 
 import org.launchcode.models.Cheese;
-import org.launchcode.models.CheeseData;
 import org.launchcode.models.CheeseType;
+import org.launchcode.models.Data.CheeseDao;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import java.util.ArrayList;
 
 
 /**
@@ -19,17 +19,20 @@ import java.util.ArrayList;
 @RequestMapping("cheese")
 public class CheeseController {
 
+    @Autowired
+    private CheeseDao cheeseDao;
 
     // Request path: /cheese
     @RequestMapping(value = "")
     public String index(Model model) {
 
-        model.addAttribute("cheeses", CheeseData.getAll());
+        model.addAttribute("cheeses", cheeseDao.findAll());
         model.addAttribute("title", "My Cheeses");
 
         return "cheese/index";
     }
 
+    // Request path: /cheese/add
     @RequestMapping(value = "add", method = RequestMethod.GET)
     public String displayAddCheeseForm(Model model) {
         model.addAttribute("title", "Add Cheese");
@@ -40,6 +43,7 @@ public class CheeseController {
 
     @RequestMapping(value = "add", method = RequestMethod.POST)
     //binds and validates cheese object from user input
+    //Spring calls object using input from add fields
     public String processAddCheeseForm(Model model, @ModelAttribute @Valid Cheese newCheese, Errors errors) {
 
         if (errors.hasErrors()) {
@@ -47,13 +51,13 @@ public class CheeseController {
             model.addAttribute("cheeseTypes", CheeseType.values());
             return "cheese/add";
         }
-        CheeseData.addCheese(newCheese);
+        cheeseDao.save(newCheese);
         return "redirect:";
     }
 
     @RequestMapping(value = "remove", method = RequestMethod.GET)
     public String displayRemoveCheeseForm(Model model) {
-        model.addAttribute("cheeses", CheeseData.getAll());
+        model.addAttribute("cheeses", cheeseDao.findAll());
         model.addAttribute("title", "Remove Cheese");
         return "cheese/remove";
     }
@@ -62,7 +66,7 @@ public class CheeseController {
     public String processRemoveCheeseForm(@RequestParam int[] cheeseIds) {
 
         for (int cheeseId : cheeseIds) {
-            CheeseData.removeCheese(cheeseId);
+            cheeseDao.delete(cheeseId);
         }
 
         return "redirect:";
@@ -70,7 +74,7 @@ public class CheeseController {
 
     @RequestMapping(value = "edit/{cheeseId}", method = RequestMethod.GET)
     public String displayEditForm(Model model, @PathVariable int cheeseId) {
-        Cheese theCheese = CheeseData.getById(cheeseId);
+        Cheese theCheese = cheeseDao.findOne(cheeseId);
         model.addAttribute("cheese", theCheese);
         model.addAttribute("cheeseTypes", CheeseType.values());
         model.addAttribute("title", "Edit cheese: " + theCheese.getName());
@@ -79,20 +83,23 @@ public class CheeseController {
     }
 
     @RequestMapping(value = "edit/{cheeseId}", method = RequestMethod.POST)
-    public String processEditForm(Model model, @RequestParam int cheeseId, @ModelAttribute @Valid Cheese theCheese, Errors errors) {
+    //Spring calls Cheese object based on input from edit fields
+    public String processEditForm(Model model, @ModelAttribute @Valid Cheese theCheese, Errors errors) {
         if (errors.hasErrors()) {
-            model.addAttribute("title", "Add Cheese");
+            model.addAttribute("title", "Edit Cheese: " + theCheese.getName());
             model.addAttribute("cheeseTypes", CheeseType.values());
             return "cheese/edit";
         } else {
 
-            Cheese ch = CheeseData.getById(cheeseId);
+            Cheese ch = cheeseDao.findOne(theCheese.getId());
             ch.setName(theCheese.getName());
             ch.setDescription(theCheese.getDescription());
             ch.setRating(theCheese.getRating());
             ch.setType(theCheese.getType());
 
-            model.addAttribute("cheeses", CheeseData.getAll());
+
+
+            model.addAttribute("cheeses", cheeseDao.findAll());
 
             return "cheese/index";
         }
